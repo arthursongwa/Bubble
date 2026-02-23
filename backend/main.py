@@ -38,7 +38,7 @@ async def refresh_loop():
     """Boucle de refresh en arrière-plan."""
     INTERVALS = {
         "clock":  1,
-        "emails": 120,
+        "emails": 10,
         "jobs":   3600,
         "movies": 3600,
         "weather": 600,
