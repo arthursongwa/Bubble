@@ -672,7 +672,7 @@ function createCard(id, cfg) {
   const hasBadge = ['emails', 'jobs', 'movies'].includes(id);
   const headerLabel = { emails: 'GMAIL', jobs: 'LINKEDIN JOBS', movies: 'TMDB', clock: '', weather: 'WEATHER' }[id] || id.toUpperCase();
   const idx = Object.keys(state.blocks).indexOf(id) + 1;
-  const code = id.substring(0, 10).toUpperCase() + '-0' + idx;
+  const code = id.substring(0, 10).toUpperCase();
 
   el.innerHTML = `
     <div class="drag-bar" data-block="${id}">
