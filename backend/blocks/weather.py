@@ -1,73 +1,38 @@
-"""
-Bloc Météo — Données OpenWeatherMap.
-Nécessite une clé API gratuite sur openweathermap.org
-Config : { "city": "Paris", "api_key": "..." }
-"""
-
+import os
 import requests
-from core.base_block import BaseBlock
-from core.theme import THEME
 
 
-WEATHER_ICONS = {
-    "Clear": "☀",
-    "Clouds": "☁",
-    "Rain": "🌧",
-    "Drizzle": "🌦",
-    "Thunderstorm": "⛈",
-    "Snow": "❄",
-    "Mist": "🌫",
-    "Fog": "🌫",
-    "Haze": "🌫",
-}
+def get_weather() -> dict:
+    api_key = os.environ.get("WEATHER_API_KEY", "")
+    city    = os.environ.get("WEATHER_CITY", "Paris")
+    units   = os.environ.get("WEATHER_UNITS", "metric")
 
+    if not api_key:
+        return {"error": "WEATHER_API_KEY non configuré"}
 
-class WeatherBlock(BaseBlock):
-
-    BLOCK_ID = "weather"
-    BLOCK_TITLE = "Météo"
-    REFRESH_MS = 10 * 60 * 1_000   # 10 minutes
-    MIN_WIDTH = 240
-    MIN_HEIGHT = 180
-
-    def fetch(self) -> dict:
-        api_key = self.config.get("api_key", "")
-        city = self.config.get("city", "Paris")
-
-        if not api_key or api_key == "YOUR_OPENWEATHER_KEY":
-            return {"error": "Clé API manquante dans config.yaml"}
-
-        url = (
-            f"https://api.openweathermap.org/data/2.5/weather"
-            f"?q={city}&appid={api_key}&units=metric&lang=fr"
+    try:
+        resp = requests.get(
+            "https://api.openweathermap.org/data/2.5/weather",
+            params={
+                "q":     city,
+                "appid": api_key,
+                "units": units,
+                "lang":  "fr",
+            },
+            timeout=10,
         )
-        r = requests.get(url, timeout=10)
-        r.raise_for_status()
-        d = r.json()
+        resp.raise_for_status()
+        d = resp.json()
 
-        condition = d["weather"][0]["main"]
         return {
-            "city": city,
-            "temp": round(d["main"]["temp"]),
-            "feels_like": round(d["main"]["feels_like"]),
-            "humidity": d["main"]["humidity"],
+            "city":        d["name"],
+            "temp":        round(d["main"]["temp"]),
+            "feels_like":  round(d["main"]["feels_like"]),
+            "humidity":    d["main"]["humidity"],
+            "wind":        round(d["wind"]["speed"] * 3.6),  # m/s → km/h
             "description": d["weather"][0]["description"].capitalize(),
-            "icon": WEATHER_ICONS.get(condition, "◌"),
-            "wind": round(d["wind"]["speed"] * 3.6),  # m/s -> km/h
+            "icon":        d["weather"][0]["icon"],
+            "error":       None,
         }
-
-    def render(self, data: dict):
-        if "error" in data:
-            self.add_label(data["error"], size=11, color=THEME["warning"])
-            return
-
-        # Icône + température
-        self.add_row(
-            data["city"],
-            f"{data['icon']}  {data['temp']}°C",
-            THEME["accent"]
-        )
-        self.add_row("Ressenti", f"{data['feels_like']}°C")
-        self.add_row("Humidité", f"{data['humidity']}%")
-        self.add_row("Vent", f"{data['wind']} km/h")
-        self.add_label(data["description"], size=10, color=THEME["text_dim"])
+    except Exception as e:
+        return {"error": str(e)}

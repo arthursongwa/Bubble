@@ -537,7 +537,7 @@
 
   <div id="body">
 
-    <!-- S idebar -->
+    <!-- Sidebar -->
     <aside id="sidebar">
       <div class="sb-label">BLOCS</div>
       <div id="sidebar-toggles"></div>
@@ -570,7 +570,7 @@ const BLOCKS_META = {
   emails:  { label: 'Emails',  icon: 'solar:letter-linear',           enabled: true  },
   jobs:    { label: 'Jobs',    icon: 'solar:briefcase-linear',        enabled: true  },
   movies:  { label: 'Movies',  icon: 'solar:videocamera-linear',      enabled: false },
-  weather: { label: 'Weather', icon: 'solar:cloud-sun-linear',        enabled: false },
+  weather: { label: 'Weather', icon: 'solar:cloud-sun-linear',        enabled: true  },
 };
 
 const state = {
@@ -646,7 +646,7 @@ function setStatus(ok, label) {
 function buildSidebar() {
   document.getElementById('sidebar-toggles').innerHTML = Object.entries(state.blocks)
     .map(([id, cfg]) => `
-      <button class="sb-toggle ${cfg.enabled ? 'active' : ''}" onclick="toggleBlock('${id}')">
+      <button id="toggle-${id}" class="sb-toggle ${cfg.enabled ? 'active' : ''}" onclick="toggleBlock('${id}')">
         <iconify-icon icon="${cfg.icon}" stroke-width="1.5"></iconify-icon>
         <span>${cfg.label}</span>
       </button>`).join('');
@@ -724,7 +724,28 @@ function renderBlock(blockId, data) {
     case 'emails':  return renderEmails(el, data);
     case 'jobs':    return renderJobs(el, data);
     case 'movies':  return renderMovies(el, data);
+    case 'weather': return renderWeather(el, data);
   }
+}
+
+function renderWeather(el, d) {
+  if (d.error) { renderError('weather', d.error); return; }
+  el.innerHTML = `
+    <div class="clock-wrap">
+      <div class="clock-time" style="font-size:36px">\${esc(d.temp || '--')}°</div>
+      <div class="clock-date">\${esc(d.description || '')}</div>
+      <div class="clock-week">\${esc(d.city || '')} · Ressenti \${esc(d.feels_like || '--')}°</div>
+      <div style="display:flex;gap:24px;margin-top:16px">
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--muted2);font-family:var(--font-mono)">HUMIDITÉ</div>
+          <div style="font-size:14px;color:var(--muted);margin-top:4px">\${esc(d.humidity || '--')}%</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:11px;color:var(--muted2);font-family:var(--font-mono)">VENT</div>
+          <div style="font-size:14px;color:var(--muted);margin-top:4px">\${esc(d.wind || '--')} km/h</div>
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderError(blockId, msg) {
@@ -823,12 +844,36 @@ function renderMovies(el, d) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// TOGGLE
+// TOGGLE — ajoute/retire uniquement le bloc concerné
 // ═══════════════════════════════════════════════════════════════════
 function toggleBlock(id) {
-  state.blocks[id].enabled = !state.blocks[id].enabled;
-  buildSidebar();
-  buildGrid();
+  const cfg = state.blocks[id];
+  cfg.enabled = !cfg.enabled;
+
+  // Met à jour uniquement le bouton sidebar cliqué
+  const btn = document.getElementById('toggle-' + id);
+  if (btn) {
+    btn.className = 'sb-toggle ' + (cfg.enabled ? 'active' : '');
+  }
+
+  const grid = document.getElementById('grid');
+
+  if (cfg.enabled) {
+    // Retire une dropzone si elle existe, sinon append
+    const dz = grid.querySelector('.dropzone');
+    const card = createCard(id, cfg);
+    if (dz) {
+      grid.replaceChild(card, dz);
+    } else {
+      grid.appendChild(card);
+    }
+  } else {
+    // Retire uniquement ce bloc et met une dropzone à la place
+    const card = document.getElementById('block-' + id);
+    if (card) {
+      grid.replaceChild(createDropzone(), card);
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════

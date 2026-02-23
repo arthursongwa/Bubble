@@ -14,6 +14,7 @@ from blocks.clock import get_clock
 from blocks.emails import get_emails
 from blocks.jobs import get_jobs
 from blocks.movies import get_movies
+from blocks.weather import get_weather
 
 
 # ── Cache in-memory ───────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ async def refresh_loop():
         "emails": 120,
         "jobs":   3600,
         "movies": 3600,
+        "weather": 600,
     }
     counters = {k: v for k, v in INTERVALS.items()}
 
@@ -59,6 +61,8 @@ async def refresh_loop():
                         data = await asyncio.to_thread(get_jobs)
                     elif block_id == "movies":
                         data = await asyncio.to_thread(get_movies)
+                    elif block_id == "weather":
+                        data = await asyncio.to_thread(get_weather)
                     else:
                         continue
 
@@ -102,6 +106,8 @@ async def get_block(block_id: str):
             data = await asyncio.to_thread(get_jobs)
         elif block_id == "movies":
             data = await asyncio.to_thread(get_movies)
+        elif block_id == "weather":
+            data = await asyncio.to_thread(get_weather)
         else:
             return JSONResponse({"ok": False, "error": f"Bloc '{block_id}' inconnu"}, status_code=404)
 
