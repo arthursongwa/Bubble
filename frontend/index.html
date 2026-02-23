@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Dashboard</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0A;
+      --surface:   #111111;
+      --surface2:  #181818;
+      --border:    #1f1f1f;
+      --border2:   #2a2a2a;
+      --text:      #e5e5e5;
+      --muted:     #6b6b6b;
+      --muted2:    #404040;
+      --accent:    #6366f1;
+      --accent-bg: rgba(99,102,241,0.08);
+      --accent-border: rgba(99,102,241,0.2);
+      --green:     #22c55e;
+      --amber:     #f59e0b;
+      --font-body: 'Syne', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html, body {
+      height: 100%; width: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+    /* ── Layout ────────────────────────────────────────── */
+    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Titlebar ──────────────────────────────────────── */
+    #titlebar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .tb-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .tb-logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tb-logo-box {
+      width: 20px; height: 20px;
+      background: var(--text);
+      color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    .tb-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+    }
+
+    .tb-sep { width: 1px; height: 18px; background: var(--border2); }
+
+    .tb-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tb-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px rgba(34,197,94,0.4);
+    }
+
+    .tb-status-text {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .tb-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+    }
+
+    .tb-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+      font-size: 18px;
+    }
+
+    .tb-btn:hover { color: var(--text); }
+    .tb-btn.close:hover { color: #ef4444; }
+
+    /* ── Body ──────────────────────────────────────────── */
+    #body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ───────────────────────────────────────── */
+    #sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 12px;
+      gap: 4px;
+    }
+
+    .sb-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--muted2);
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+
+    .sb-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 10px;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      background: none;
+      color: var(--muted);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.12s;
+      width: 100%;
+      text-align: left;
+    }
+
+    .sb-toggle:hover { color: var(--text); background: var(--surface); }
+
+    .sb-toggle.active {
+      background: var(--surface2);
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    .sb-toggle iconify-icon { font-size: 16px; flex-shrink: 0; }
+
+    .sb-footer {
+      margin-top: auto;
+      padding: 8px;
+      font-size: 11px;
+      color: var(--muted2);
+      line-height: 1.5;
+    }
+
+    /* ── Canvas ────────────────────────────────────────── */
+    #canvas {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* ── Block Card ────────────────────────────────────── */
+    .block-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.15s;
+    }
+
+    .block-card:hover { border-color: var(--border2); }
+    .block-card.drag-over { border-color: var(--accent); border-style: dashed; }
+
+    /* DragBar */
+    .drag-bar {
+      height: 32px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      cursor: grab;
+      color: var(--muted2);
+      transition: color 0.15s;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      gap: 8px;
+      user-select: none;
+      flex-shrink: 0;
+    }
+
+    .drag-bar:hover { color: var(--muted); }
+    .drag-bar:active { cursor: grabbing; }
+
+    /* Block Header */
+    .block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #0e0e0e;
+      flex-shrink: 0;
+    }
+
+    .block-header-title {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--muted);
+    }
+
+    .badge.active {
+      background: var(--accent-bg);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
+    /* Block Content */
+    .block-content {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── States ────────────────────────────────────────── */
+    .state-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 1.5px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    /* ── Clock Block ───────────────────────────────────── */
+    .clock-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 32px 16px;
+    }
+
+    .clock-time {
+      font-family: var(--font-mono);
+      font-size: 52px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    .clock-date {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .clock-week {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted2);
+      letter-spacing: 0.15em;
+    }
+
+    /* ── Email Rows ────────────────────────────────────── */
+    .email-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      cursor: pointer;
+    }
+
+    .email-row:last-child { border-bottom: none; }
+    .email-row:hover { background: var(--surface2); }
+
+    .email-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(99,102,241,0.35);
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+
+    .email-body { flex: 1; min-width: 0; }
+
+    .email-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+
+    .email-from {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      truncate: true;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .email-date {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .email-subject {
+      font-size: 12px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Job Rows ──────────────────────────────────────── */
+    .job-row {
+      display: flex;
+      flex-direction: column;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      cursor: pointer;
+      gap: 3px;
+      text-decoration: none;
+    }
+
+    .job-row:last-child { border-bottom: none; }
+    .job-row:hover { background: var(--surface2); }
+
+    .job-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: color 0.1s;
+    }
+
+    .job-row:hover .job-title { color: white; }
+
+    .job-meta {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Movie Grid ────────────────────────────────────── */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .movie-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .movie-poster {
+      aspect-ratio: 2/3;
+      background: var(--surface2);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .movie-poster img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .movie-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.3;
+    }
+
+    .movie-rating {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── DropZone ──────────────────────────────────────── */
+    .dropzone {
+      min-height: 260px;
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted2);
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-bg);
+    }
+
+    /* ── Animations ────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.2s ease forwards; }
+  </style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- TitleBar -->
+  <header id="titlebar">
+    <div class="tb-left">
+      <div class="tb-logo">
+        <div class="tb-logo-box">B</div>
+        <span class="tb-title">DASHBOARD</span>
+      </div>
+      <div class="tb-sep"></div>
+      <div class="tb-status">
+        <div class="tb-dot" id="status-dot"></div>
+        <span class="tb-status-text" id="status-text">Connexion…</span>
+      </div>
+    </div>
+    <div class="tb-actions">
+      <button class="tb-btn" title="Minimiser"><iconify-icon icon="solar:minus-linear"></iconify-icon></button>
+      <button class="tb-btn" title="Agrandir"><iconify-icon icon="solar:maximize-square-linear"></iconify-icon></button>
+      <button class="tb-btn close" title="Fermer"><iconify-icon icon="solar:close-circle-linear"></iconify-icon></button>
+    </div>
+  </header>
+
+  <div id="body">
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sb-label">BLOCS</div>
+      <div id="sidebar-toggles"></div>
+      <div class="sb-footer">Cliquez pour activer ou désactiver un module du canvas.</div>
+    </aside>
+
+    <!-- Canvas -->
+    <section id="canvas">
+      <div id="grid"></div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CONFIG — pointe vers ton backend Railway
+// ═══════════════════════════════════════════════════════════════════
+const API_BASE = window.location.hostname === 'localhost'
+  ? 'http://localhost:8000'
+  : 'https://TON-PROJET.railway.app';  // ← remplace après déploiement
+
+const WS_BASE = API_BASE.replace('https://', 'wss://').replace('http://', 'ws://');
+
+// ═══════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════
+const BLOCKS_META = {
+  clock:   { label: 'Clock',   icon: 'solar:clock-circle-linear',    enabled: true  },
+  emails:  { label: 'Emails',  icon: 'solar:letter-linear',           enabled: true  },
+  jobs:    { label: 'Jobs',    icon: 'solar:briefcase-linear',        enabled: true  },
+  movies:  { label: 'Movies',  icon: 'solar:videocamera-linear',      enabled: false },
+  weather: { label: 'Weather', icon: 'solar:cloud-sun-linear',        enabled: false },
+};
+
+const state = {
+  blocks: JSON.parse(JSON.stringify(BLOCKS_META)),
+  data: {},
+  ws: null,
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// WebSocket — connexion temps réel
+// ═══════════════════════════════════════════════════════════════════
+function connectWS() {
+  try {
+    const ws = new WebSocket(`${WS_BASE}/ws`);
+    state.ws = ws;
+
+    ws.onopen = () => {
+      setStatus(true);
+      console.log('[WS] Connecté');
+    };
+
+    ws.onmessage = ({ data }) => {
+      try {
+        const { block, data: blockData } = JSON.parse(data);
+        state.data[block] = blockData;
+        if (state.blocks[block]?.enabled) renderBlock(block, blockData);
+      } catch(e) {}
+    };
+
+    ws.onclose = () => {
+      setStatus(false, 'Reconnexion…');
+      setTimeout(connectWS, 3000);
+    };
+
+    ws.onerror = () => ws.close();
+  } catch(e) {
+    setStatus(false, 'Erreur WS');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// REST fetch — chargement initial par bloc
+// ═══════════════════════════════════════════════════════════════════
+async function fetchBlock(blockId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/${blockId}`);
+    const json = await res.json();
+    if (json.ok) {
+      state.data[blockId] = json.data;
+      renderBlock(blockId, json.data);
+    } else {
+      renderError(blockId, json.error);
+    }
+  } catch(e) {
+    renderError(blockId, 'Backend inaccessible');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// STATUS
+// ═══════════════════════════════════════════════════════════════════
+function setStatus(ok, label) {
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  dot.style.background = ok ? 'var(--green)' : 'var(--amber)';
+  dot.style.boxShadow  = ok ? '0 0 8px rgba(34,197,94,0.4)' : '0 0 8px rgba(245,158,11,0.4)';
+  txt.textContent = label || (ok ? 'System Active' : 'Déconnecté');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UI BUILD
+// ═══════════════════════════════════════════════════════════════════
+function buildSidebar() {
+  document.getElementById('sidebar-toggles').innerHTML = Object.entries(state.blocks)
+    .map(([id, cfg]) => `
+      <button class="sb-toggle ${cfg.enabled ? 'active' : ''}" onclick="toggleBlock('${id}')">
+        <iconify-icon icon="${cfg.icon}" stroke-width="1.5"></iconify-icon>
+        <span>${cfg.label}</span>
+      </button>`).join('');
+}
+
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const active = Object.entries(state.blocks).filter(([, c]) => c.enabled);
+  active.forEach(([id, cfg]) => grid.appendChild(createCard(id, cfg)));
+
+  // Drop zones pour compléter la grille de 3 colonnes
+  const rem = (3 - (active.length % 3)) % 3;
+  for (let i = 0; i < rem; i++) grid.appendChild(createDropzone());
+}
+
+function createCard(id, cfg) {
+  const el = document.createElement('article');
+  el.id = `block-${id}`;
+  el.className = 'block-card';
+  el.setAttribute('draggable', 'true');
+
+  const hasBadge = ['emails', 'jobs', 'movies'].includes(id);
+  const headerLabel = { emails: 'GMAIL', jobs: 'LINKEDIN JOBS', movies: 'TMDB', clock: '', weather: 'WEATHER' }[id] || id.toUpperCase();
+  const idx = Object.keys(state.blocks).indexOf(id) + 1;
+  const code = id.substring(0, 3).toUpperCase() + '-0' + idx;
+
+  el.innerHTML = `
+    <div class="drag-bar" data-block="${id}">
+      <iconify-icon icon="solar:menu-dots-linear"></iconify-icon>
+      <span>DRAG · ${code}</span>
+    </div>
+    ${hasBadge ? `
+    <div class="block-header">
+      <span class="block-header-title">${headerLabel}</span>
+      <span class="badge" id="badge-${id}">...</span>
+    </div>` : ''}
+    <div class="block-content" id="content-${id}">
+      <div class="state-center">
+        <div class="spinner"></div>
+        <span>Chargement…</span>
+      </div>
+    </div>`;
+
+  setupDrag(el, id);
+
+  // Si on a des données en cache → render immédiat
+  if (state.data[id]) renderBlock(id, state.data[id]);
+  else fetchBlock(id);
+
+  return el;
+}
+
+function createDropzone() {
+  const el = document.createElement('div');
+  el.className = 'dropzone';
+  el.innerHTML = `<iconify-icon icon="solar:add-circle-linear" style="font-size:28px"></iconify-icon>`;
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drag-over'); });
+  return el;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════
+function renderBlock(blockId, data) {
+  const el = document.getElementById(`content-${blockId}`);
+  if (!el) return;
+  el.classList.add('fade-up');
+
+  switch(blockId) {
+    case 'clock':   return renderClock(el, data);
+    case 'emails':  return renderEmails(el, data);
+    case 'jobs':    return renderJobs(el, data);
+    case 'movies':  return renderMovies(el, data);
+  }
+}
+
+function renderError(blockId, msg) {
+  const el = document.getElementById(`content-${blockId}`);
+  if (!el) return;
+  el.innerHTML = `
+    <div class="state-center">
+      <iconify-icon icon="solar:danger-triangle-linear" style="font-size:24px;color:var(--amber)"></iconify-icon>
+      <span style="font-size:12px;color:var(--muted);text-align:center;max-width:160px">${esc(msg)}</span>
+    </div>`;
+}
+
+function renderClock(el, d) {
+  el.innerHTML = `
+    <div class="clock-wrap">
+      <div class="clock-time">${d.time}</div>
+      <div class="clock-date">${d.date}</div>
+      <div class="clock-week">${d.week}</div>
+    </div>`;
+}
+
+function renderEmails(el, d) {
+  if (d.error) { renderError('emails', d.error); return; }
+
+  const badge = document.getElementById('badge-emails');
+  if (badge) {
+    badge.textContent = `${d.total} UNREAD`;
+    badge.className = 'badge ' + (d.total > 0 ? 'active' : '');
+  }
+
+  if (!d.emails?.length) {
+    el.innerHTML = `<div class="state-center"><iconify-icon icon="solar:check-circle-linear" style="font-size:22px"></iconify-icon><span>Aucun email non lu</span></div>`;
+    return;
+  }
+
+  el.innerHTML = d.emails.map(em => `
+    <div class="email-row">
+      <div class="email-dot"></div>
+      <div class="email-body">
+        <div class="email-meta">
+          <span class="email-from">${esc(em.from)}</span>
+          <span class="email-date">${esc(em.date)}</span>
+        </div>
+        <div class="email-subject">${esc(em.subject)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function renderJobs(el, d) {
+  if (d.error) { renderError('jobs', d.error); return; }
+
+  const badge = document.getElementById('badge-jobs');
+  if (badge) {
+    badge.textContent = `${d.total} OFFRES`;
+    badge.className = 'badge ' + (d.total > 0 ? 'active' : '');
+  }
+
+  if (!d.jobs?.length) {
+    el.innerHTML = `<div class="state-center"><span>Aucune offre trouvée</span></div>`;
+    return;
+  }
+
+  el.innerHTML = d.jobs.map(j => `
+    <a class="job-row" href="${esc(j.link)}" target="_blank" rel="noopener">
+      <span class="job-title">${esc(j.title)}</span>
+      <span class="job-meta">${esc(j.company)} · ${esc(j.location)} · ${esc(j.date)}</span>
+    </a>`).join('');
+}
+
+function renderMovies(el, d) {
+  if (d.error) { renderError('movies', d.error); return; }
+
+  const badge = document.getElementById('badge-movies');
+  if (badge) {
+    badge.textContent = `${d.total} FILMS`;
+    badge.className = 'badge ' + (d.total > 0 ? 'active' : '');
+  }
+
+  if (!d.movies?.length) {
+    el.innerHTML = `<div class="state-center"><span>Aucun film récent</span></div>`;
+    return;
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'movie-grid';
+  wrap.innerHTML = d.movies.map(m => `
+    <div class="movie-card">
+      <div class="movie-poster">
+        ${m.poster ? `<img src="${esc(m.poster)}" alt="${esc(m.title)}" loading="lazy">` : ''}
+      </div>
+      <div class="movie-title">${esc(m.title)}</div>
+      <div class="movie-rating">★ ${m.rating}</div>
+    </div>`).join('');
+  el.innerHTML = '';
+  el.appendChild(wrap);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// TOGGLE
+// ═══════════════════════════════════════════════════════════════════
+function toggleBlock(id) {
+  state.blocks[id].enabled = !state.blocks[id].enabled;
+  buildSidebar();
+  buildGrid();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// DRAG & DROP entre cartes
+// ═══════════════════════════════════════════════════════════════════
+let dragged = null;
+
+function setupDrag(card, id) {
+  card.addEventListener('dragstart', e => {
+    dragged = id;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => card.style.opacity = '0.4', 0);
+  });
+  card.addEventListener('dragend', () => {
+    card.style.opacity = '';
+    dragged = null;
+  });
+  card.addEventListener('dragover', e => {
+    e.preventDefault();
+    if (dragged && dragged !== id) card.classList.add('drag-over');
+  });
+  card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+  card.addEventListener('drop', e => {
+    e.preventDefault();
+    card.classList.remove('drag-over');
+    if (dragged && dragged !== id) swapBlocks(dragged, id);
+  });
+}
+
+function swapBlocks(a, b) {
+  const elA = document.getElementById(`block-${a}`);
+  const elB = document.getElementById(`block-${b}`);
+  if (!elA || !elB) return;
+  const ph = document.createElement('div');
+  elA.parentNode.insertBefore(ph, elA);
+  elB.parentNode.insertBefore(elA, elB);
+  ph.parentNode.insertBefore(elB, ph);
+  ph.remove();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════════════
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════
+buildSidebar();
+buildGrid();
+connectWS();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "window": { "x": 50, "y": 50, "width": 1200, "height": 750 },
+  "blocks": {
+    "clock":   { "enabled": true },
+    "emails":  { "enabled": true, "imap_host": "imap.gmail.com", "email": "TON_EMAIL@gmail.com", "password": "MOT_PASSE_APP", "max_display": 5 },
+    "jobs":    { "enabled": true, "keywords": "Full Stack", "location": "France", "max_display": 6 },
+    "movies":  { "enabled": false },
+    "weather": { "enabled": false }
+  }
+}
