@@ -16,7 +16,7 @@ def get_movies() -> dict:
         return {"error": "TMDB_API_KEY non configuré", "movies": []}
 
     today = datetime.today()
-    date_from = (today - timedelta(days=14)).strftime("%Y-%m-%d")
+    date_from = (today - timedelta(days=0)).strftime("%Y-%m-%d")
     date_to   = (today + timedelta(days=7)).strftime("%Y-%m-%d")
 
     try:
@@ -26,8 +26,9 @@ def get_movies() -> dict:
                 "api_key":                    api_key,
                 "language":                   language,
                 "sort_by":                    "popularity.desc",
+                "primary_release_year":   today.year,
                 "primary_release_date.gte":   date_from,
-                "primary_release_date.lte":   date_to,
+                # "primary_release_date.lte":   date_to,
                 "with_release_type":          "3|2",
                 "page":                       1,
             },
