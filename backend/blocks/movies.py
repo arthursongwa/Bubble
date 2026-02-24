@@ -25,7 +25,7 @@ def get_movies() -> dict:
             params={
                 "api_key":                    api_key,
                 "language":                   language,
-                "sort_by":                    "primary_release_date.desc",
+                "sort_by":                    "popularity.desc",
                 "primary_release_date.gte":   date_from,
                 "primary_release_date.lte":   date_to,
                 "with_release_type":          "3|2",
